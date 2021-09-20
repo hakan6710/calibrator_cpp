@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/fze2/Desktop/calibrator_cpp/build",
+  "command": "/usr/bin/x86_64-linux-gnu-g++-7   -I/home/fze2/Desktop/calibrator_cpp/src -I/home/fze2/Desktop/calibrator_cpp/include -isystem /usr/local/include/opencv4   -std=c++14 -O3 -Wno-write-strings  -g   -o CMakeFiles/ros2Mot.dir/main.cpp.o -c /home/fze2/Desktop/calibrator_cpp/main.cpp",
+  "file": "/home/fze2/Desktop/calibrator_cpp/main.cpp"
+}
+]
