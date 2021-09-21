@@ -93,42 +93,42 @@ void do_shit(){
     
     cv::Rodrigues(rvec,rotationMatrix);
     
-    int index=0;
-    for (cv::MatIterator_<double> i = rvec.begin<double>(); i != rvec.end<double>(); ++i)
-    {
-        if(index==0){
-            (*i)=1.28915501; 
-        }else if(index==1){
-            (*i)=-0.04329259;
-        }else{
-            (*i)=-0.02157708;
-        }
+    // int index=0;
+    // for (cv::MatIterator_<double> i = rvec.begin<double>(); i != rvec.end<double>(); ++i)
+    // {
+    //     if(index==0){
+    //         (*i)=1.28915501; 
+    //     }else if(index==1){
+    //         (*i)=-0.04329259;
+    //     }else{
+    //         (*i)=-0.02157708;
+    //     }
 
-        index++;
-    }
+    //     index++;
+    // }
 
-    index=0;
-    for (cv::MatIterator_<double> i = tvec.begin<double>(); i != tvec.end<double>(); ++i)
-    {
-        if(index==0){
-            (*i)=-0.21439605; 
-        }else if(index==1){
-            (*i)=-1.44011037;
-        }else{
-            (*i)=1.01072908;
-        }
+    // index=0;
+    // for (cv::MatIterator_<double> i = tvec.begin<double>(); i != tvec.end<double>(); ++i)
+    // {
+    //     if(index==0){
+    //         (*i)=-0.21439605; 
+    //     }else if(index==1){
+    //         (*i)=-1.44011037;
+    //     }else{
+    //         (*i)=1.01072908;
+    //     }
 
-        index++;
-    }
-    rotationMatrix.at<double>(0,0)=0.99898361;
-    rotationMatrix.at<double>(0,1)=-0.00817286;
-    rotationMatrix.at<double>(0,2)=-0.04432788;
-    rotationMatrix.at<double>(1,0)=-0.04031455;
-    rotationMatrix.at<double>(1,1)=0.27787527;
-    rotationMatrix.at<double>(1,2)=-0.95977084;
-    rotationMatrix.at<double>(2,0)=0.0201617;
-    rotationMatrix.at<double>(2,1)=0.9605824;
-    rotationMatrix.at<double>(2,2)=0.27726335;
+    //     index++;
+    // }
+    // rotationMatrix.at<double>(0,0)=0.99898361;
+    // rotationMatrix.at<double>(0,1)=-0.00817286;
+    // rotationMatrix.at<double>(0,2)=-0.04432788;
+    // rotationMatrix.at<double>(1,0)=-0.04031455;
+    // rotationMatrix.at<double>(1,1)=0.27787527;
+    // rotationMatrix.at<double>(1,2)=-0.95977084;
+    // rotationMatrix.at<double>(2,0)=0.0201617;
+    // rotationMatrix.at<double>(2,1)=0.9605824;
+    // rotationMatrix.at<double>(2,2)=0.27726335;
     // std::cout<<rotationMatrix.at<double>(0,0)<<std::endl;
     // std::cout<<rotationMatrix.at<double>(0,1)<<std::endl;
     // std::cout<<rotationMatrix.at<double>(1,0)<<std::endl;
@@ -177,21 +177,39 @@ void calculate_shit( cv::Mat rot_m,cv::Mat input_tvec,cv::Mat  img_points, std::
 void python_abbild(cv::Mat rot_m,cv::Mat input_tvec,cv::Mat  img_points, std::vector<cv::Point3d > world_points ){
     cv::Mat extrinsic,projection_matrix,projection_without_z;
     
-    cv::hconcat(rot_m,input_tvec);
+    cv::hconcat(rot_m,input_tvec,rot_m);
 
 
+    print(rot_m);
     print(input_tvec);
     std::cout<<"Intrinsic_calib"<<std::endl;
     //print(input_tvec);
     std::cout<<"A_cols="<<intrinsic_calibration_matrix.cols<<" A_Rows="<<intrinsic_calibration_matrix.rows<<std::endl;
     std::cout<<"B_cols= "<<input_tvec.cols<<" B_Rows= "<<input_tvec.rows<<std::endl;
-    // projection_matrix=intrinsic_calibration_matrix*input_tvec;
+    projection_matrix=intrinsic_calibration_matrix*rot_m;
 
+    cv::Mat temp,temp_letzter_teil;
+    print(projection_matrix);
+    projection_matrix(cv::Range(0, projection_matrix.rows), cv::Range(0, projection_matrix.cols-2 )).copyTo(temp);
+    print(temp);
     
-    //print(input_tvec);
-    // cv::print(projection_matrix);
-    // projection_without_z=projection_matrix.colRange(0,projection_matrix.cols-1);
-    // cv::print( projection_without_z);
+
+    projection_matrix(cv::Range(0, projection_matrix.rows), cv::Range(projection_matrix.cols-1, projection_matrix.cols )).copyTo(temp_letzter_teil);
+    print(temp_letzter_teil);
+
+
+    std::cout<<std::endl<<"Nach Verknüpfung, um 3 Spalte zu löschen"<<std::endl;
+    cv::hconcat(temp,temp_letzter_teil,temp);
+    print(temp);
+
+    temp.copyTo(projection_without_z);
+    double test_P[]= {957.44351858, 1206.95421951,1};
+    cv::Mat_<double> test_p_mat(1, 3, test_P);
+
+    cv::Mat result=test_p_mat*projection_without_z.inv();
+
+    print(result);
+
 
 }
 
