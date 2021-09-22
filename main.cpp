@@ -7,16 +7,6 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 
-// double rotation_values[] = {0.998915, -0.00823395, -0.04583641,
-// -0.04174363, 0.27802867, -0.9596653 ,
-//  0.02064567, 0.9605375, 0.2773833 };
-// cv::Mat_<double> rotation_matrix(3, 3, rotation_values);
-
-
-// double transform_values[] = {-0.21408474,
-//  1.4380101 ,
-//  1.008065 };
-// cv::Mat transform_matrix(1,3,cv::DataType<double>::type,transform_values);
 using std::bind;
 using std::placeholders::_1;
 
@@ -35,9 +25,9 @@ cv::Mat_<double> distortion_matrix(1, 5, dist_coefficients);
 
 
 void calculate_shit( cv::Mat rot_m,cv::Mat input_tvec,cv::Mat img_points, std::vector<cv::Point3d > world_points);
-void python_abbild(cv::Mat rot_m,cv::Mat input_tvec,cv::Mat  img_points, std::vector<cv::Point3d > world_points );
+void calculate_projection_mat(cv::Mat rot_m,cv::Mat input_tvec,cv::Mat  img_points, std::vector<cv::Point3d > world_points );
+void calculate_projection(cv::Mat_<cv::Point2d> pointMatrix,std::vector<cv::Point3d > world_points);
 void do_shit(){
-
 
     // labelling the position of corresponding feature points on the input image.
     std::vector<cv::Point2d>  srcImagePoints = {cv::Point2d(957.1643,  1161.1813),
@@ -54,29 +44,14 @@ void do_shit(){
     world_points.push_back(cv::Point3d(0,2.73,0));   
     world_points.push_back(cv::Point3d(-0.32, 3.225, 0));   
     world_points.push_back(cv::Point3d(-0.32,2.75,0));   
-    
-
-
-    // std::vector<cv::Point2d>  undistorted_test = {cv::Point2d(957.44354, 1206.9542 ),
-    // cv::Point2d(958.97003, 1241.543  ),
-    // cv::Point2d(889.02637, 1210.124 ),
-    // cv::Point2d( 883.08417, 1245.0016 ),
-    // cv::Point2d(820.9494,  1212.3871 ),
-    // cv::Point2d(806.45746, 1247.431)};    
-    // cv::Mat test_undistorted(undistorted_test);
 
     double zero_dist[]= {0, 0, 0, 0, 0};
     cv::Mat_<double> zero_dist_mat(1, 5, zero_dist);
    
     cv::Mat_<cv::Point2d> distortedpoints(srcImagePoints);
     cv::Mat_<cv::Point2d> undistortedPoints;
-    // std::cout<<"Undistorted dsa";
-    // cv::print(undistortedPoints);
-    //    undistortedAndNormalizedPointMatrix = cv2.undistortPoints(imgpoints, cameraMatrix=Camera_matrix, distCoeffs= Dist_coefficients,P=Camera_matrix)
     cv::undistortPoints(distortedpoints, undistortedPoints, intrinsic_calibration_matrix,distortion_matrix,cv::noArray(), intrinsic_calibration_matrix);
     
-    // std::cout<<"Undistorted Points";
-    // cv::print(undistortedPoints);
 
     cv::Mat rvec(1,3,cv::DataType<double>::type);
     cv::Mat rvec2(1,3,cv::DataType<double>::type);
@@ -84,75 +59,19 @@ void do_shit(){
     cv::Mat tvec(1,3,cv::DataType<double>::type);
     cv::Mat rotationMatrix(3,3,cv::DataType<double>::type);
 
-    
-
-
-    
+     
     cv::solvePnP(world_points, undistortedPoints, intrinsic_calibration_matrix, zero_dist_mat, rvec, tvec);
 
-    
     cv::Rodrigues(rvec,rotationMatrix);
-    
-    // int index=0;
-    // for (cv::MatIterator_<double> i = rvec.begin<double>(); i != rvec.end<double>(); ++i)
-    // {
-    //     if(index==0){
-    //         (*i)=1.28915501; 
-    //     }else if(index==1){
-    //         (*i)=-0.04329259;
-    //     }else{
-    //         (*i)=-0.02157708;
-    //     }
-
-    //     index++;
-    // }
-
-    // index=0;
-    // for (cv::MatIterator_<double> i = tvec.begin<double>(); i != tvec.end<double>(); ++i)
-    // {
-    //     if(index==0){
-    //         (*i)=-0.21439605; 
-    //     }else if(index==1){
-    //         (*i)=-1.44011037;
-    //     }else{
-    //         (*i)=1.01072908;
-    //     }
-
-    //     index++;
-    // }
-    // rotationMatrix.at<double>(0,0)=0.99898361;
-    // rotationMatrix.at<double>(0,1)=-0.00817286;
-    // rotationMatrix.at<double>(0,2)=-0.04432788;
-    // rotationMatrix.at<double>(1,0)=-0.04031455;
-    // rotationMatrix.at<double>(1,1)=0.27787527;
-    // rotationMatrix.at<double>(1,2)=-0.95977084;
-    // rotationMatrix.at<double>(2,0)=0.0201617;
-    // rotationMatrix.at<double>(2,1)=0.9605824;
-    // rotationMatrix.at<double>(2,2)=0.27726335;
-    // std::cout<<rotationMatrix.at<double>(0,0)<<std::endl;
-    // std::cout<<rotationMatrix.at<double>(0,1)<<std::endl;
-    // std::cout<<rotationMatrix.at<double>(1,0)<<std::endl;
-  
- 
-    // std::cout<<std::endl<<"Rvec"<<std::endl;
-    // cv::print(rvec);
-
-    // std::cout<<std::endl<<"Tvec"<<std::endl;
-    // cv::print(tvec);
-
-    // std::cout<<std::endl<<"Rot_Mat"<<std::endl;
-    // cv::print(rotationMatrix);
-
 
     //calculate_shit(rotationMatrix,tvec,undistortedPoints,world_points);
-    python_abbild(rotationMatrix,tvec,undistortedPoints,world_points);
+    calculate_projection_mat(rotationMatrix,tvec,undistortedPoints,world_points);
+    //calculate_projection(undistortedPoints,world_points);
 
 }
 
 void calculate_shit( cv::Mat rot_m,cv::Mat input_tvec,cv::Mat  img_points, std::vector<cv::Point3d > world_points ){
     int index=0;
- 
-
     for (cv::MatIterator_<cv::Point2d> i = img_points.begin<cv::Point2d>(); i != img_points.end<cv::Point2d>(); ++i)
     {
         
@@ -171,51 +90,70 @@ void calculate_shit( cv::Mat rot_m,cv::Mat input_tvec,cv::Mat  img_points, std::
         std::cout<<"x="<<std::to_string(b.at<double>(0))<<", x_offset"<<std::to_string(b.at<double>(0)-world_points[index].x)<<" ,y="
         <<std::to_string(b.at<double>(1))
         <<" ,y_offset="<<std::to_string(b.at<double>(1)-world_points[index].y)<<std::endl;
+        index++;
     }
 }
 
-void python_abbild(cv::Mat rot_m,cv::Mat input_tvec,cv::Mat  img_points, std::vector<cv::Point3d > world_points ){
+void calculate_projection_mat(cv::Mat rot_m,cv::Mat input_tvec,cv::Mat  img_points, std::vector<cv::Point3d > world_points ){
     cv::Mat extrinsic,projection_matrix,projection_without_z;
     
     cv::hconcat(rot_m,input_tvec,rot_m);
 
-
+    std::cout<<std::endl<<"Rotation Matrix"<<std::endl;
     print(rot_m);
+    std::cout<<std::endl<<"TVEC"<<std::endl;
     print(input_tvec);
-    std::cout<<"Intrinsic_calib"<<std::endl;
-    //print(input_tvec);
-    std::cout<<"A_cols="<<intrinsic_calibration_matrix.cols<<" A_Rows="<<intrinsic_calibration_matrix.rows<<std::endl;
-    std::cout<<"B_cols= "<<input_tvec.cols<<" B_Rows= "<<input_tvec.rows<<std::endl;
+    std::cout<<std::endl<<"Intrinsic_Calib"<<std::endl;        
+    print(intrinsic_calibration_matrix);
+    
+    std::cout<<std::endl<<"Projection Matrix="<<std::endl;
     projection_matrix=intrinsic_calibration_matrix*rot_m;
+    print(projection_matrix);
 
     cv::Mat temp,temp_letzter_teil;
-    print(projection_matrix);
     projection_matrix(cv::Range(0, projection_matrix.rows), cv::Range(0, projection_matrix.cols-2 )).copyTo(temp);
-    print(temp);
-    
-
     projection_matrix(cv::Range(0, projection_matrix.rows), cv::Range(projection_matrix.cols-1, projection_matrix.cols )).copyTo(temp_letzter_teil);
-    print(temp_letzter_teil);
-
-
-    std::cout<<std::endl<<"Nach Verknüpfung, um 3 Spalte zu löschen"<<std::endl;
+ 
+    //std::cout<<std::endl<<"Nach Verknüpfung, um 3 Spalte zu löschen"<<std::endl;
     cv::hconcat(temp,temp_letzter_teil,temp);
-    print(temp);
 
     temp.copyTo(projection_without_z);
-    double test_P[]= {957.44351858, 1206.95421951,1};
-    cv::Mat_<double> test_p_mat(1, 3, test_P);
-
-    cv::Mat result=test_p_mat*projection_without_z.inv();
-
-    print(result);
+   
+    std::cout<<std::endl<<"Projection Matrix without Z"<<std::endl;
+    cv::print(projection_without_z);
 
 
-}
+    std::cout<<std::endl<<"Inverse Projection Matrix without Z"<<std::endl;
+    print(projection_without_z.inv());
 
-void test_new_shit(cv::Mat rot_m,cv::Mat input_tvec,cv::Mat  img_points, std::vector<cv::Point3d > world_points ){
 
 }
+
+double inverse_projection[] = {0.001033345173586479, 0.00018399363370939, -1.147897923609774,
+ -6.54057468801172e-05, -0.0009437968757491468, 1.984220419748764,
+ 4.154784468431722e-05, 0.0008933007469281109, -0.8734918697727939};
+cv::Mat_<double> inverse_projection_mat(3, 3, inverse_projection);
+
+void calculate_projection(cv::Mat_<cv::Point2d> pointMatrix,std::vector<cv::Point3d > world_points){
+    int index=0;
+
+    cv::Mat undistortedPoints;
+    cv::undistortPoints(pointMatrix, undistortedPoints,intrinsic_calibration_matrix,distortion_matrix,cv::noArray(),intrinsic_calibration_matrix);
+    
+    for(auto p:pointMatrix){
+        cv::Mat uvPoint = (cv::Mat_<double>(3,1) <<p.x, p.y, 1); // u = 363, v = 222, got this point using mouse callback
+
+        cv::Mat result=inverse_projection_mat*uvPoint;
+        double xGround=result.at<double>(0)/result.at<double>(2);
+        double yGround=result.at<double>(1)/result.at<double>(2);
+        std::cout<<"x="<<std::to_string(xGround)<<", x_offset"<<std::to_string(xGround-world_points[index].x)<<" ,y="
+        <<std::to_string(yGround)<<" ,y_offset="<<std::to_string(world_points[index].y-yGround)<<std::endl;
+        
+        index++;
+    }
+}
+
+
 
 int main() {
     // FHAC::objectTracker myTracker;
